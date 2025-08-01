@@ -17,37 +17,32 @@
     </div>
     <nav>
       <a href="#" onclick="mostrarSeccion('inicio')">Inicio</a>
-      <a href="#" onclick="mostrarSeccion('categoria')">Categoría</a>
       <a href="#" onclick="mostrarSeccion('adminLogin')">Administrador</a>
     </nav>
   </header>
 
-  <!-- Barra de búsqueda pequeña debajo del header -->
   <div class="search-container-below">
     <input type="text" id="searchInput" placeholder="Buscar producto..." onkeyup="buscarProducto()" autocomplete="off" />
     <ul id="searchSuggestions" class="suggestions-list"></ul>
   </div>
 
+  <section id="categoria" class="section-box visible">
+    <h2>Filtrar por categoría</h2>
+    <select id="categoriaSelect" onchange="filterProducts()">
+      <option value="all">Todos</option>
+      <option value="convencional">Convencional</option>
+      <option value="ortopedico">Ortopédico</option>
+    </select>
+  </section>
+
   <main>
-    <!-- Inicio -->
     <section id="inicio" class="section-box visible">
       <h2>Productos disponibles</h2>
       <div class="product-list" id="productList"></div>
     </section>
 
-    <!-- Categoría -->
-    <section id="categoria" class="section-box hidden">
-      <h2>Filtrar por categoría</h2>
-      <select id="categoriaSelect" onchange="filterProducts()">
-        <option value="all">Todos</option>
-        <option value="convencional">Convencional</option>
-        <option value="ortopedico">Ortopédico</option>
-      </select>
-    </section>
-
-    <!-- Login Administrador (modal) -->
     <section id="adminLogin" class="modal hidden">
-      <div class="modal-content">
+      <div class="modal-content admin-modal-content">
         <span class="close" onclick="cerrarModalAdmin()">&times;</span>
         <h2>Iniciar sesión Administrador</h2>
         <input type="text" id="adminCedula" placeholder="Cédula" />
@@ -57,7 +52,6 @@
       </div>
     </section>
 
-    <!-- Panel Administrador -->
     <section id="admin" class="section-box hidden">
       <div id="adminContent">
         <h2>Panel del Administrador</h2>
@@ -68,7 +62,7 @@
         </select>
         <textarea id="productDescription" placeholder="Descripción del producto"></textarea>
         <input type="text" id="productPrice" placeholder="₡0.00" />
-        <input type="file" id="productImageFile" accept="image/*" />
+        <input type="file" id="productImageFile" accept="image/*" multiple />
         <button onclick="addProduct()">Agregar Producto</button>
         <ul id="adminList"></ul>
         <button onclick="logoutAdmin()">Cerrar sesión</button>
@@ -76,9 +70,23 @@
     </section>
   </main>
 
+  <div id="productModal" class="modal hidden">
+    <div class="modal-content product-modal-content">
+      <span class="close" onclick="closeProductModal()">&times;</span>
+      <div id="carouselInner" class="carousel-inner"></div>
+      <div id="modalDescription" class="modal-description"></div>
+      <div id="recommendedProducts" class="recommended-products"></div>
+      <a id="modalWhats" href="#" target="_blank">Comprar por WhatsApp</a>
+    </div>
+  </div>
+
   <footer>
     <p>&copy; 2025 Tienda Virtual</p>
   </footer>
+
+  <script src="JS/Admin.js"></script>
+</body>
+</html>
 
   <script src="JS/Admin.js"></script>
 </body>
