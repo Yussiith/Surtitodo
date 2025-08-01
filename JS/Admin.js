@@ -1,191 +1,228 @@
-let productos = JSON.parse(localStorage.getItem("productos")) || [
-  {
-    nombre: "Camiseta Estampada",
-    categoria: "convencional",
-    descripcion: "Camiseta moderna y cómoda",
-    precio: "₡15,000",
-    imagen: "images/camiseta.jpg",
-    whatsapp: "https://wa.me/50661631200?text=Quiero%20comprar%20Camiseta%20Estampada"
-  },
-  {
-    nombre: "Zapatillas Deportivas",
-    categoria: "ortopedico",
-    descripcion: "Zapatillas para correr",
-    precio: "₡40,000",
-    imagen: "images/zapatillas.jpg",
-    whatsapp: "https://wa.me/50661631200?text=Quiero%20comprar%20Zapatillas%20Deportivas"
-  }
-];
+const STORAGE_KEY = "surtitodo_products";
 
-let esAdmin = false;
+function getStoredProducts() {
+  const data = localStorage.getItem(STORAGE_KEY);
+  return data ? JSON.parse(data) : [];
+}
 
-function guardarProductos() {
-  localStorage.setItem("productos", JSON.stringify(productos));
+function saveProducts(products) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(products));
 }
 
 function mostrarSeccion(id) {
-  // Oculta todas las secciones excepto header y footer
-  document.querySelectorAll("main > section").forEach(sec => sec.classList.add("hidden"));
+  document.querySelectorAll("main > section").forEach(s => s.classList.add("hidden"));
   document.getElementById(id).classList.remove("hidden");
-  
-  // Si es modal, muestra el modal y no los otros sections
-  if(id === "adminLogin") {
-    document.getElementById("adminLogin").classList.remove("hidden");
-  } else {
-    document.getElementById("adminLogin").classList.add("hidden");
-  }
 }
 
-function mostrarProductos(lista = productos) {
-  const contenedor = document.getElementById("productList");
-  if (!contenedor) return;
-  contenedor.innerHTML = "";
-  lista.forEach(p => {
-    contenedor.innerHTML += `
-      <div class="product">
-        <h3>${p.nombre}</h3>
-        <img src="${p.imagen}" alt="${p.nombre}">
-        <p>${p.descripcion}</p>
-        <p class="price">${p.precio || ""}</p>
-        <a href="${p.whatsapp}" target="_blank" rel="noopener noreferrer">Comprar por WhatsApp</a>
-      </div>`;
-  });
-}
-
-function filterProducts() {
-  const filtro = document.getElementById("categoriaSelect").value;
-  const filtrados = filtro === "all" ? productos : productos.filter(p => p.categoria === filtro);
-  mostrarProductos(filtrados);
-}
-
-function buscarProducto() {
-  const input = document.getElementById("searchInput").value.toLowerCase();
-  const lista = document.getElementById("searchSuggestions");
-  lista.innerHTML = "";
-
-  if (input.length === 0) return;
-
-  productos
-    .filter(p => p.nombre.toLowerCase().includes(input))
-    .forEach(p => {
-      const li = document.createElement("li");
-      li.textContent = p.nombre;
-      li.onclick = () => {
-        alert("Seleccionaste: " + p.nombre);
-        lista.innerHTML = "";
-        mostrarSeccion("inicio");
-      };
-      lista.appendChild(li);
-    });
-}
-
-// Mostrar modal admin login
-function mostrarLoginAdmin() {
-  mostrarSeccion("adminLogin");
-}
-
-// Cerrar modal admin login
 function cerrarModalAdmin() {
   document.getElementById("adminLogin").classList.add("hidden");
 }
 
-// Verificar clave admin con validaciones
 function verificarClave() {
-  const cedula = document.getElementById("adminCedula").value.trim();
-  const nombre = document.getElementById("adminNombre").value.trim();
-  const clave = document.getElementById("adminClave").value;
-
-  if(!cedula || !nombre || !clave) {
-    alert("Por favor completa todos los campos.");
-    return;
-  }
-
-  // Ejemplo clave fija, puedes implementar tu lógica
-  if (clave === "1234") {
-    esAdmin = true;
-    cerrarModalAdmin();
-    mostrarSeccion("admin");
-    renderListaAdmin();
-  } else {
-    alert("Contraseña incorrecta");
-  }
-}
-
-function renderListaAdmin() {
-  const lista = document.getElementById("adminList");
-  lista.innerHTML = "";
-  productos.forEach((p, i) => {
-    const li = document.createElement("li");
-    li.innerHTML = `${p.nombre} <button onclick="eliminarProducto(${i})">Eliminar</button>`;
-    lista.appendChild(li);
-  });
-}
-
-function eliminarProducto(index) {
-  if(confirm(`¿Seguro que deseas eliminar el producto "${productos[index].nombre}"?`)) {
-    productos.splice(index, 1);
-    guardarProductos();
-    renderListaAdmin();
-    mostrarProductos();
-    alert("Producto eliminado correctamente.");
-  }
-}
-
-function addProduct() {
-  const nombre = document.getElementById("productName").value.trim();
-  const categoria = document.getElementById("productCategory").value;
-  const descripcion = document.getElementById("productDescription").value.trim();
-  let precio = document.getElementById("productPrice").value.trim();
-  const imagenInput = document.getElementById("productImageFile");
-
-  if (!nombre || !descripcion || !imagenInput.files[0] || !precio) {
-    alert("Completa todos los campos");
-    return;
-  }
-
-  // Asegurar que el precio empiece con símbolo ₡ y tenga formato correcto
-  if(!precio.startsWith("₡")) {
-    precio = "₡" + precio;
-  }
-
-  const reader = new FileReader();
-  reader.onload = function (e) {
-    const producto = {
-      nombre,
-      categoria,
-      descripcion,
-      precio,
-      imagen: e.target.result,
-      whatsapp: `https://wa.me/50661631200?text=Quiero%20comprar%20${encodeURIComponent(nombre)}`
-    };
-    productos.push(producto);
-    guardarProductos();
-    renderListaAdmin();
-    mostrarProductos();
-    alert("Producto agregado correctamente.");
-    document.getElementById("productName").value = "";
-    document.getElementById("productDescription").value = "";
-    document.getElementById("productPrice").value = "";
-    imagenInput.value = "";
-  };
-  reader.readAsDataURL(imagenInput.files[0]);
+  mostrarSeccion("admin");
+  mostrarProductosAdmin();
 }
 
 function logoutAdmin() {
-  if(confirm("¿Deseas cerrar sesión del administrador?")) {
-    esAdmin = false;
-    mostrarSeccion("inicio");
-  }
+  mostrarSeccion("inicio");
 }
 
-// Al cargar página
-window.onload = () => {
-  mostrarProductos();
+function filterProducts() {
+  const selected = document.getElementById("categoriaSelect").value;
+  renderProducts(selected);
+}
 
-  // Asignar evento para logo (ir a inicio)
-  const logoElems = document.querySelectorAll("#logoBtn");
-  logoElems.forEach(el => {
-    el.style.cursor = "pointer";
-    el.onclick = () => mostrarSeccion("inicio");
+function renderProducts(filtro = "all") {
+  const productList = document.getElementById("productList");
+  productList.innerHTML = "";
+
+  const products = getStoredProducts();
+
+  products
+    .filter(p => filtro === "all" || p.category === filtro)
+    .forEach(product => {
+      const div = document.createElement("div");
+      div.className = "product";
+      div.innerHTML = `
+        <img src="${product.media[0]}" alt="${product.name}">
+        <h3>${product.name}</h3>
+        <p class="price">${product.price}</p>
+      `;
+      div.onclick = () => openProductModal(product);
+      productList.appendChild(div);
+    });
+}
+
+function openProductModal(product) {
+  const modal = document.getElementById('productModal');
+  const carousel = document.getElementById('carouselInner');
+  carousel.innerHTML = '';
+
+  product.media.forEach(src => {
+    carousel.innerHTML += src.endsWith(".mp4")
+      ? `<video controls src="${src}"></video>`
+      : `<img src="${src}" alt="${product.name}">`;
   });
+
+  document.getElementById("modalDescription").innerText = product.description;
+
+  const rec = document.getElementById("recommendedProducts");
+  rec.innerHTML = '';
+  (product.recommendations || []).forEach(r => {
+    const div = document.createElement("div");
+    div.className = "rec-card";
+    div.innerHTML = `<img src="${r.image}" alt="${r.name}"><p>${r.name}</p>`;
+    rec.appendChild(div);
+  });
+
+  document.getElementById("modalWhats").href =
+    `https://wa.me/${product.whatsAppNumber || "50660001234"}?text=${encodeURIComponent("Estoy interesado en " + product.name)}`;
+
+  modal.classList.remove("hidden");
+  modal.classList.add("visible");
+}
+
+function closeProductModal() {
+  const modal = document.getElementById("productModal");
+  modal.classList.remove("visible");
+  modal.classList.add("hidden");
+}
+
+function buscarProducto() {
+  const input = document.getElementById("searchInput").value.toLowerCase();
+  const suggestions = document.getElementById("searchSuggestions");
+  suggestions.innerHTML = "";
+
+  getStoredProducts()
+    .filter(p => p.name.toLowerCase().includes(input))
+    .forEach(p => {
+      const li = document.createElement("li");
+      li.textContent = p.name;
+      li.onclick = () => {
+        openProductModal(p);
+        suggestions.innerHTML = "";
+      };
+      suggestions.appendChild(li);
+    });
+}
+
+let editingIndex = null;
+
+function mostrarProductosAdmin() {
+  const list = document.getElementById("adminList");
+  const products = getStoredProducts();
+  list.innerHTML = "";
+
+  products.forEach((p, index) => {
+    const li = document.createElement("li");
+    li.innerHTML = `
+      <strong>${p.name}</strong> - ${p.category} - ${p.price}
+      <div>
+        <button onclick="editarProducto(${index})">Editar</button>
+        <button onclick="eliminarProducto(${index})">Eliminar</button>
+      </div>
+    `;
+    list.appendChild(li);
+  });
+}
+
+function editarProducto(index) {
+  const products = getStoredProducts();
+  const p = products[index];
+
+  document.getElementById("productName").value = p.name;
+  document.getElementById("productCategory").value = p.category;
+  document.getElementById("productDescription").value = p.description;
+  document.getElementById("productPrice").value = p.price.replace("₡", "");
+  document.getElementById("productImageFile").value = "";
+
+  editingIndex = index;
+  alert("Modo edición activado: modifica los campos y haz clic en 'Agregar Producto' para guardar.");
+}
+
+function eliminarProducto(index) {
+  const products = getStoredProducts();
+  if (!confirm(`¿Eliminar "${products[index].name}"?`)) return;
+
+  products.splice(index, 1);
+  saveProducts(products);
+  renderProducts();
+  mostrarProductosAdmin();
+}
+
+function addProduct() {
+  const name = document.getElementById("productName").value.trim();
+  const category = document.getElementById("productCategory").value;
+  const description = document.getElementById("productDescription").value.trim();
+  const price = document.getElementById("productPrice").value.trim();
+  const fileInput = document.getElementById("productImageFile");
+  const files = Array.from(fileInput.files);
+
+  if (!name || !category || !description || !price) {
+    alert("Completa todos los campos obligatorios.");
+    return;
+  }
+
+  const products = getStoredProducts();
+
+  const readFiles = (fileList, callback) => {
+    const results = [];
+    let count = 0;
+
+    if (fileList.length === 0) {
+      callback([]);
+      return;
+    }
+
+    fileList.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = e => {
+        results.push(e.target.result);
+        count++;
+        if (count === fileList.length) callback(results);
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  readFiles(files, mediaData => {
+    const productData = {
+      name,
+      category,
+      description,
+      price: `₡${price}`,
+      media: mediaData.length > 0
+        ? mediaData
+        : editingIndex !== null ? getStoredProducts()[editingIndex].media : [],
+      recommendations: [],
+      whatsAppNumber: "50660001234"
+    };
+
+    if (editingIndex !== null) {
+      products[editingIndex] = productData;
+      alert("Producto editado correctamente.");
+      editingIndex = null;
+    } else {
+      products.push(productData);
+      alert("Producto agregado correctamente.");
+    }
+
+    saveProducts(products);
+    limpiarFormulario();
+    renderProducts();
+    mostrarProductosAdmin();
+  });
+}
+
+function limpiarFormulario() {
+  document.getElementById("productName").value = "";
+  document.getElementById("productCategory").value = "convencional";
+  document.getElementById("productDescription").value = "";
+  document.getElementById("productPrice").value = "";
+  document.getElementById("productImageFile").value = "";
+}
+
+window.onload = () => {
+  renderProducts();
+  mostrarProductosAdmin();
 };
